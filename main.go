@@ -24,6 +24,7 @@ import (
 )
 
 var version = "dev"
+var udpTimeout time.Duration
 
 func main() {
 	forwards := flag.String("fwd", "", "TCP/UDP forwarding list (<tcp|udp>:[local-ip]:local-port:remote-ip:remote-port,...)")
@@ -37,6 +38,7 @@ func main() {
 	wgKeepalive := flag.Int("wg-keepalive", 0, "Wireguard keepalive")
 	logLevelString := flag.String("log-level", "info", "Log level")
 	showVersion := flag.Bool("version", false, "Show version")
+	flag.DurationVar(&udpTimeout, "udp-timeout", 2*time.Minute, "UDP timeout")
 	flag.Parse()
 
 	if *showVersion {
@@ -337,7 +339,7 @@ func forwardUDP(ctx context.Context, wg *sync.WaitGroup, lNet netOp, lAddr strin
 
 					buffer := make([]byte, 1392)
 					for {
-						remote.SetReadDeadline(time.Now().Add(3 * time.Second))
+						remote.SetReadDeadline(time.Now().Add(udpTimeout))
 						n, err = remote.Read(buffer)
 						if err != nil {
 							logrus.Debugf("Error reading from UDP socket: %s", err)
