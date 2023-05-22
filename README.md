@@ -39,6 +39,7 @@ It connects to a regular Wireguard server running on `10.8.43.5:58120` with this
 PrivateKey = WJiRwPPp1NnNl1PbEAtH0yeG160xxPXXe+8OFxk6H1o=
 Address = 192.168.4.1/32
 ListenPort = 58120
+MTU = 1420
 
 [Peer]
 PublicKey = +t6LAA9uaC1RXp2GzXQKCuwkys6Q2188EnAgU26P6xc=

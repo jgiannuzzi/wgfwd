@@ -36,6 +36,7 @@ func main() {
 	wgPublicKey := flag.String("wg-public-key", "", "Wireguard public key")
 	wgEndpoint := flag.String("wg-endpoint", "", "Wireguard endpoint")
 	wgKeepalive := flag.Int("wg-keepalive", 0, "Wireguard keepalive")
+	wgMtu := flag.Int("wg-mtu", 1420, "Wireguard MTU")
 	logLevelString := flag.String("log-level", "info", "Log level")
 	showVersion := flag.Bool("version", false, "Show version")
 	flag.DurationVar(&udpTimeout, "udp-timeout", 2*time.Minute, "UDP timeout")
@@ -77,7 +78,7 @@ func main() {
 	tun, tnet, err := netstack.CreateNetTUN(
 		[]netip.Addr{netip.MustParseAddr(*wgLocalIP)},
 		[]netip.Addr{},
-		1420,
+		*wgMtu,
 	)
 	if err != nil {
 		logrus.Fatalf("Error creating tunnel interface: %s", err)
