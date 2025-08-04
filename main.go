@@ -34,6 +34,7 @@ func main() {
 	wgRemoteIP := flag.String("wg-remote-ip", "", "Wireguard remote IP")
 	wgPrivateKey := flag.String("wg-private-key", "", "Wireguard private key")
 	wgPublicKey := flag.String("wg-public-key", "", "Wireguard public key")
+	wgPreSharedKey := flag.String("wg-preshared-key", "", "Wireguard preshared key")
 	wgEndpoint := flag.String("wg-endpoint", "", "Wireguard endpoint")
 	wgKeepalive := flag.Int("wg-keepalive", 0, "Wireguard keepalive")
 	wgMtu := flag.Int("wg-mtu", 1420, "Wireguard MTU")
@@ -104,8 +105,33 @@ func main() {
 		}
 		fmt.Fprintf(&configBuilder, "public_key=%s\n", base64ToHex(*wgPublicKey))
 		fmt.Fprintf(&configBuilder, "allowed_ip=%s\n", *wgRemoteIP)
+
 		if *wgEndpoint != "" {
-			fmt.Fprintf(&configBuilder, "endpoint=%s\n", *wgEndpoint)
+			// Split endpoint into host and port
+			host, port, err := net.SplitHostPort(*wgEndpoint)
+			if err != nil {
+				logrus.Fatalf("Invalid endpoint format (must be host:port): %v", err)
+			}
+
+			ip := net.ParseIP(host)
+			if ip == nil {
+				ips, err := net.LookupHost(host)
+				if err != nil {
+					logrus.Fatalf("DNS lookup failed for %s: %v", host, err)
+				}
+				if len(ips) == 0 {
+					logrus.Fatalf("No IP addresses found for %s", host)
+				}
+				ip = net.ParseIP(ips[0])
+				if ip == nil {
+					logrus.Fatalf("Resolved IP %s is invalid", ips[0])
+				}
+				*wgEndpoint = ip.String()
+			}
+			fmt.Fprintf(&configBuilder, "endpoint=%s:%s\n", *wgEndpoint, port)
+		}
+		if *wgPreSharedKey != "" {
+			fmt.Fprintf(&configBuilder, "preshared_key=%s\n", base64ToHex(*wgPreSharedKey))
 		}
 		if *wgKeepalive != 0 {
 			fmt.Fprintf(&configBuilder, "persistent_keepalive_interval=%d\n", *wgKeepalive)
